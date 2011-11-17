@@ -13,9 +13,8 @@ from email.MIMEBase import MIMEBase
 from email.Header import Header
 from email.Utils import formatdate, getaddresses, formataddr, parseaddr
 
-from django.conf import settings
 from utils import DNS_NAME
-from django.utils.encoding import smart_str, force_unicode
+from encoding import smart_str, force_unicode
 
 from tornado import gen
 
