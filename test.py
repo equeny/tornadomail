@@ -22,10 +22,10 @@ def error_handler(e, msg, traceback):
 
 with stack_context.ExceptionStackContext(error_handler):
     send_mail(
-        'subject', 'message', 'noreply.djangostars@gmail.com',
+        'subject', 'message', '<your google email>',
         ['<your email>'], callback=callback,
         connection=EmailBackend(
-            'smtp.gmail.com', 587, '<your google id>', '<your google password>',
+            'smtp.gmail.com', 587, '<your google emaild>', '<your google password>',
             True
          )
     )
