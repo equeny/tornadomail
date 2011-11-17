@@ -256,16 +256,6 @@ class SMTP:
 
         """
         self.debuglevel = debuglevel
-
-    @contextlib.contextmanager
-    def _handle_exception(self):
-        import ipdb
-        ipdb.set_trace()
-        try:
-            yield
-        except Exception:
-            import ipdb
-            ipdb.set_trace()
                     
     def _get_socket(self, port, host, timeout, callback):
         # This makes it simpler for SMTP_SSL to use the SMTP connect code
@@ -796,114 +786,72 @@ class SMTP:
         if callback:
             callback(res)
 
-if _have_ssl:
-
-    class SMTP_SSL(SMTP):
-        """ This is a subclass derived from SMTP that connects over an SSL encrypted
-        socket (to use this class you need a socket module that was compiled with SSL
-        support). If host is not specified, '' (the local host) is used. If port is
-        omitted, the standard SMTP-over-SSL port (465) is used. keyfile and certfile
-        are also optional - they can contain a PEM formatted private key and
-        certificate chain file for the SSL connection.
-        """
-        def __init__(self, host='', port=0, local_hostname=None,
-                     keyfile=None, certfile=None,
-                     timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
-            self.keyfile = keyfile
-            self.certfile = certfile
-            SMTP.__init__(self, host, port, local_hostname, timeout)
-            self.default_port = SMTP_SSL_PORT
-
-        def _get_socket(self, host, port, timeout):
-            if self.debuglevel > 0: print>>stderr, 'connect:', (host, port)
-            new_socket = socket.create_connection((host, port), timeout)
-            new_socket = ssl.wrap_socket(new_socket, self.keyfile, self.certfile)
-            self.file = SSLFakeFile(new_socket)
-            return new_socket
-
-    __all__.append("SMTP_SSL")
-
-#
-# LMTP extension
-#
-LMTP_PORT = 2003
-
-class LMTP(SMTP):
-    """LMTP - Local Mail Transfer Protocol
-
-    The LMTP protocol, which is very similar to ESMTP, is heavily based
-    on the standard SMTP client. It's common to use Unix sockets for LMTP,
-    so our connect() method must support that as well as a regular
-    host:port server. To specify a Unix socket, you must use an absolute
-    path as the host, starting with a '/'.
-
-    Authentication is supported, using the regular SMTP mechanism. When
-    using a Unix socket, LMTP generally don't support or require any
-    authentication, but your mileage might vary."""
-
-    ehlo_msg = "lhlo"
-
-    def __init__(self, host = '', port = LMTP_PORT, local_hostname = None):
-        """Initialize a new instance."""
-        SMTP.__init__(self, host, port, local_hostname)
-
-    def connect(self, host = 'localhost', port = 0):
-        """Connect to the LMTP daemon, on either a Unix or a TCP socket."""
-        if host[0] != '/':
-            return SMTP.connect(self, host, port)
-
-        # Handle Unix-domain sockets.
-        try:
-            self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self.sock.connect(host)
-        except socket.error, msg:
-            if self.debuglevel > 0: print>>stderr, 'connect fail:', host
-            if self.sock:
-                self.sock.close()
-            self.sock = None
-            raise socket.error, msg
-        (code, msg) = self.getreply()
-        if self.debuglevel > 0: print>>stderr, "connect:", msg
-        return (code, msg)
-
-
-# Test the sendmail method, which tests most of the others.
-# Note: This always sends to localhost.
-if __name__ == '__main__':
-    import sys
-
-    def prompt(prompt):
-        sys.stdout.write(prompt + ": ")
-        return sys.stdin.readline().strip()
-
-    fromaddr = 'anton.agafonov@gmail.com'#prompt("From")
-    toaddrs  = ['test@example.com'] #prompt("To").split(',')
-    #print "Enter message, end with ^D:"
-    mail_msg = 'test message\r\n\r\n'
-    # while 1:
-    #         line = sys.stdin.readline()
-    #         if not line:
-    #             break
-    #         msg = msg + line
-    from message import sanitize_address, EmailMessage
-    email_message = EmailMessage('Subject', mail_msg, fromaddr, toaddrs)
-    from_email = sanitize_address(email_message.from_email, email_message.encoding)
-    recipients = [sanitize_address(addr, email_message.encoding)
-                  for addr in email_message.recipients()]
-    
-
-    server = SMTP('localhost')
-    server.set_debuglevel(1)
-    def _on_connect(code, msg):
-        server.sendmail(
-            from_email, recipients, email_message.message().as_string(),
-            callback=_on_send
-        )
-
-    def _on_send(*args, **kwargs):
-        ioloop.IOLoop.instance().stop()
-
-    server.connect('127.0.0.1', 1025, callback=_on_connect)
-    #server.sendmail(fromaddr, toaddrs, msg)
-    #server.quit()
-    ioloop.IOLoop.instance().start()
+# if _have_ssl:
+# 
+#     class SMTP_SSL(SMTP):
+#         """ This is a subclass derived from SMTP that connects over an SSL encrypted
+#         socket (to use this class you need a socket module that was compiled with SSL
+#         support). If host is not specified, '' (the local host) is used. If port is
+#         omitted, the standard SMTP-over-SSL port (465) is used. keyfile and certfile
+#         are also optional - they can contain a PEM formatted private key and
+#         certificate chain file for the SSL connection.
+#         """
+#         def __init__(self, host='', port=0, local_hostname=None,
+#                      keyfile=None, certfile=None,
+#                      timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+#             self.keyfile = keyfile
+#             self.certfile = certfile
+#             SMTP.__init__(self, host, port, local_hostname, timeout)
+#             self.default_port = SMTP_SSL_PORT
+# 
+#         def _get_socket(self, host, port, timeout):
+#             if self.debuglevel > 0: print>>stderr, 'connect:', (host, port)
+#             new_socket = socket.create_connection((host, port), timeout)
+#             new_socket = ssl.wrap_socket(new_socket, self.keyfile, self.certfile)
+#             self.file = SSLFakeFile(new_socket)
+#             return new_socket
+# 
+#     __all__.append("SMTP_SSL")
+# 
+# #
+# # LMTP extension
+# #
+# LMTP_PORT = 2003
+# 
+# class LMTP(SMTP):
+#     """LMTP - Local Mail Transfer Protocol
+# 
+#     The LMTP protocol, which is very similar to ESMTP, is heavily based
+#     on the standard SMTP client. It's common to use Unix sockets for LMTP,
+#     so our connect() method must support that as well as a regular
+#     host:port server. To specify a Unix socket, you must use an absolute
+#     path as the host, starting with a '/'.
+# 
+#     Authentication is supported, using the regular SMTP mechanism. When
+#     using a Unix socket, LMTP generally don't support or require any
+#     authentication, but your mileage might vary."""
+# 
+#     ehlo_msg = "lhlo"
+# 
+#     def __init__(self, host = '', port = LMTP_PORT, local_hostname = None):
+#         """Initialize a new instance."""
+#         SMTP.__init__(self, host, port, local_hostname)
+# 
+#     def connect(self, host = 'localhost', port = 0):
+#         """Connect to the LMTP daemon, on either a Unix or a TCP socket."""
+#         if host[0] != '/':
+#             return SMTP.connect(self, host, port)
+# 
+#         # Handle Unix-domain sockets.
+#         try:
+#             self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+#             self.sock.connect(host)
+#         except socket.error, msg:
+#             if self.debuglevel > 0: print>>stderr, 'connect fail:', host
+#             if self.sock:
+#                 self.sock.close()
+#             self.sock = None
+#             raise socket.error, msg
+#         (code, msg) = self.getreply()
+#         if self.debuglevel > 0: print>>stderr, "connect:", msg
+#         return (code, msg)

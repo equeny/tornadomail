@@ -18,15 +18,18 @@ define("port", default=8888, help="run on the given port", type=int)
 logging.basicConfig(level=logging.DEBUG) 
 
 class Application(tornado.web.Application):
-    mail = ''
-
-class MainHandler(tornado.web.RequestHandler):
     @property
     def mail_connection(self):
         return EmailBackend(
-            'smtp.gmail.com', 587, '<your google id>', '<your google password>',
+            'smtp.gmail.com', 587, '<your google email>', '<your google password>',
             True
-         )
+        )
+
+class MainHandler(tornado.web.RequestHandler):
+
+    @property
+    def mail_connection(self):
+        return self.application.mail_connection
 
     def get(self):
         self.render("index.html")
@@ -40,7 +43,7 @@ class MainHandler(tornado.web.RequestHandler):
         message = EmailMessage(
             self.get_argument('subject'),
             self.get_argument('message'),
-            'noreply.djangostars@gmail.com',
+            '<your google email>',
             [self.get_argument('email')],
             connection=self.mail_connection
         )
