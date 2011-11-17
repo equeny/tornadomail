@@ -16,7 +16,7 @@ setup(
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
     ],
-    packages=['tornadomail'],
+    packages=['tornadomail', 'tornadomail.backends'],
     install_requires=['tornado>=2.1'],
     requires=['tornado (>=1.9)'],
     download_url="http://github.com/downloads/equeny/tornadomail/tornadomail-%s.tar.gz" % version,
