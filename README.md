@@ -1,7 +1,7 @@
 Tornado mail
 ============
 
-Asynchronous email sending library for Tornado. Port of django.mail.
+Asynchronous email sending(SMTP) library for Tornado. Port of django.mail.
 
 
 Installation
