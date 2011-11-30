@@ -7,6 +7,7 @@ Asynchronous email sending library for Tornado. Port of django.mail.
 Installation
 ------------
 
+Using pip: `pip install tornadomail`
 From source: `git clone git://github.com/equeny/tornadomail.git; cd tornadomail; python setup.py install`
 
 Usage

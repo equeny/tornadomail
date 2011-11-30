@@ -1,7 +1,7 @@
 import os
 from distutils.core import setup
 
-version = '0.1'
+version = '0.1.1'
 
 setup(
     name="tornadomail",
@@ -18,6 +18,6 @@ setup(
     ],
     packages=['tornadomail', 'tornadomail.backends'],
     install_requires=['tornado>=2.1'],
-    requires=['tornado (>=1.9)'],
+    requires=['tornado (>=2.1)'],
     download_url="http://github.com/downloads/equeny/tornadomail/tornadomail-%s.tar.gz" % version,
 )
