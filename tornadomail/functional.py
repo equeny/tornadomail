@@ -345,7 +345,7 @@ class SimpleLazyObject(LazyObject):
         else:
             # Changed to use deepcopy from copycompat, instead of copy
             # For Python 2.4.
-            from django.utils.copycompat import deepcopy
+            from copycompat import deepcopy
             return deepcopy(self._wrapped, memo)
 
     # Need to pretend to be the wrapped class, for the sake of objects that care

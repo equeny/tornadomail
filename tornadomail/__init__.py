@@ -2,7 +2,7 @@
 Tools for sending email.
 """
 
-from django.utils.importlib import import_module
+from importlib import import_module
 
 # Imported for backwards compatibility, and for the sake
 # of a cleaner namespace. These symbols used to be in
