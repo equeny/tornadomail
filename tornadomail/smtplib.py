@@ -260,19 +260,29 @@ class SMTP:
     def _get_socket(self, port, host, timeout, callback):
         # This makes it simpler for SMTP_SSL to use the SMTP connect code
         # and just alter the socket connection bit.
+
+        if hasattr(self, '__get_socket'):
+            callback(self.__get_socket)
+            return
         if self.debuglevel > 0: print>>stderr, 'connect:', (host, port)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         stream = iostream.IOStream(s)
         callback = partial(callback, socket=stream)
         stream.connect((host, port))
+        self.__get_socket = stream
         callback(stream)
 
     def _get_ssl_socket(self, stream, **kwargs):
         # This makes it simpler for SMTP_SSL to use the SMTP connect code
         # and just alter the socket connection bit.
         callback = kwargs.pop('callback')
+        if hasattr(self, '__get_ssl_socket'):
+            callback(self.__get_ssl_socket)
+            return
         s = ssl.wrap_socket(stream.socket, do_handshake_on_connect=False, **kwargs)
+        stream.close()
         stream = iostream.SSLIOStream(s)
+        self.__get_ssl_socket = stream
         callback(stream)
 
     @gen.engine
