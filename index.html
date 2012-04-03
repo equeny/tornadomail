@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Tornadomail by equeny</title>
+    
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Tornadomail</h1>
+        <p>Django mail system ported to tornado and made asynchronous</p>
+        <p class="view"><a href="https://github.com/equeny/tornadomail">View the Project on GitHub <small>equeny/tornadomail</small></a></p>
+        <ul>
+          <li><a href="https://github.com/equeny/tornadomail/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/equeny/tornadomail/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/equeny/tornadomail">Fork On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>Tornado mail</h1>
+
+<p>Asynchronous email sending(SMTP) library for Tornado. Port of django.mail.</p>
+
+<h2>Installation</h2>
+
+<p>Using pip: <code>pip install tornadomail</code></p>
+
+<p>From source: <code>git clone git://github.com/equeny/tornadomail.git; cd tornadomail; python setup.py install</code></p>
+
+<h2>Usage</h2>
+
+<p>EmailMessage, EmailMultiAlternatives are almost identical to django classes, except send function is async and can receive callback argument.</p>
+
+<pre><code>from tornadomail.message import EmailMessage, EmailMultiAlternatives
+from tornadomail.backends.smtp import EmailBackend
+
+
+class Application(tornado.web.Application):
+    @property
+    def mail_connection(self):
+        return EmailBackend(
+            'smtp.gmail.com', 587, '&lt;your google mail&gt;', '&lt;your google password&gt;',
+            True
+        )
+
+class MainHandler(tornado.web.RequestHandler):
+
+    @property
+    def mail_connection(self):
+        return self.application.mail_connection
+
+    def get(self):
+        self.render("index.html")
+
+    def post(self):
+
+        def _finish(num):
+            print 'sended %d message(s)' % num
+            self.render("index.html")
+
+        message = EmailMessage(
+            self.get_argument('subject'),
+            self.get_argument('message'),
+            '&lt;your google mail&gt;',
+            [self.get_argument('email')],
+            connection=self.mail_connection
+        )
+        message.send()#callback=_finish)
+        self.render("index.html")
+</code></pre>
+
+<h2>Requirements</h2>
+
+<p>The following two python libraries are required</p>
+
+<ul>
+<li><a href="http://github.com/facebook/tornado">tornado&gt;=2.1</a></li>
+</ul><h2>Issues</h2>
+
+<p>Please report any issues via <a href="https://github.com/equeny/tornadomail/issues">github issues</a></p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/equeny">equeny</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+  </body>
+</html>
