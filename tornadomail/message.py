@@ -368,3 +368,20 @@ class EmailMultiAlternatives(EmailMessage):
             for alternative in self.alternatives:
                 msg.attach(self._create_mime_attachment(*alternative))
         return msg
+
+
+class EmailFromTemplate(EmailMultiAlternatives):
+    """
+    A version of EmailMultiAlternatives that builds body with the result from
+    generate a template HTML and parameters.
+    """
+    content_subtype = "html"
+
+    def __init__(self, subject, template, params={}, from_email=None, to=None,
+            bcc=None, connection=None, attachments=None, headers=None,
+            alternatives=None, cc=None):
+        if not connection.template_loader:
+            raise Exception("Must to set a template_loader to connection")
+        body = connection.template_loader.load(template).generate(**params)
+        super(EmailFromTemplate, self).__init__(subject, body, from_email, to,
+            bcc, connection, attachments, headers, alternatives, cc)
