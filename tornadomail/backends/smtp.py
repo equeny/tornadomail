@@ -25,6 +25,7 @@ class EmailBackend(BaseEmailBackend):
         else:
             self.use_tls = use_tls
         self.connection = None
+        self.template_loader = kwargs.get('template_loader', None)
 
     @gen.engine
     def open(self, callback):
