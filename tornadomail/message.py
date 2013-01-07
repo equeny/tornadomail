@@ -177,7 +177,7 @@ class EmailMessage(object):
     encoding = None     # None => use settings default
 
     def __init__(self, subject='', body='', from_email=None, to=None, bcc=None,
-                 connection=None, attachments=None, headers=None, cc=None):
+                 connection=None, attachments=None, headers=None, cc=None, reply_to=None):
         """
         Initialize a single email message (which can be sent to multiple
         recipients).
@@ -202,6 +202,7 @@ class EmailMessage(object):
         else:
             self.bcc = []
         self.from_email = from_email or DEFAULT_FROM_EMAIL
+        self.reply_to = reply_to
         self.subject = subject
         self.body = body
         self.attachments = attachments or []
@@ -221,6 +222,8 @@ class EmailMessage(object):
         msg = self._create_message(msg)
         msg['Subject'] = self.subject
         msg['From'] = self.extra_headers.get('From', self.from_email)
+        if self.reply_to:
+        	msg['Reply-To'] = self.reply_to
         msg['To'] = ', '.join(self.to)
         if self.cc:
             msg['Cc'] = ', '.join(self.cc)
@@ -337,7 +340,7 @@ class EmailMultiAlternatives(EmailMessage):
 
     def __init__(self, subject='', body='', from_email=None, to=None, bcc=None,
             connection=None, attachments=None, headers=None, alternatives=None,
-            cc=None):
+            cc=None, reply_to=None):
         """
         Initialize a single email message (which can be sent to multiple
         recipients).
@@ -346,7 +349,7 @@ class EmailMultiAlternatives(EmailMessage):
         bytestrings). The SafeMIMEText class will handle any necessary encoding
         conversions.
         """
-        super(EmailMultiAlternatives, self).__init__(subject, body, from_email, to, bcc, connection, attachments, headers, cc)
+        super(EmailMultiAlternatives, self).__init__(subject, body, from_email, to, bcc, connection, attachments, headers, cc, reply_to)
         self.alternatives = alternatives or []
 
     def attach_alternative(self, content, mimetype):
@@ -379,9 +382,9 @@ class EmailFromTemplate(EmailMultiAlternatives):
 
     def __init__(self, subject, template, params={}, from_email=None, to=None,
             bcc=None, connection=None, attachments=None, headers=None,
-            alternatives=None, cc=None):
+            alternatives=None, cc=None, reply_to=None):
         if not connection.template_loader:
             raise Exception("Must to set a template_loader to connection")
         body = connection.template_loader.load(template).generate(**params)
         super(EmailFromTemplate, self).__init__(subject, body, from_email, to,
-            bcc, connection, attachments, headers, alternatives, cc)
+            bcc, connection, attachments, headers, alternatives, cc, reply_to)
