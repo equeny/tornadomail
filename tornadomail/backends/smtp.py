@@ -53,11 +53,12 @@ class EmailBackend(BaseEmailBackend):
             if not self.fail_silently:
                 raise
 
+    @gen.engine
     def close(self):
         """Closes the connection to the email server."""
         try:
             try:
-                self.connection.quit()
+                yield gen.Task(self.connection.quit)
             except socket.sslerror:
                 # This happens when calling quit() on a TLS connection
                 # sometimes.
@@ -89,7 +90,7 @@ class EmailBackend(BaseEmailBackend):
             if sent:
                 num_sent += 1
         if new_conn_created:
-            self.close()
+            yield gen.Task(self.close)
         if callback:
             callback(num_sent)
 
