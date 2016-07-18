@@ -54,7 +54,7 @@ class EmailBackend(BaseEmailBackend):
                 raise
 
     @gen.engine
-    def close(self,callback):
+    def close(self, callback=None):
         """Closes the connection to the email server."""
         try:
             try:
@@ -69,7 +69,8 @@ class EmailBackend(BaseEmailBackend):
                 raise
         finally:
             self.connection = None
-            callback(None)
+            if callback:
+                callback(None)
 
     @gen.engine
     def send_messages(self, email_messages, callback=None):
