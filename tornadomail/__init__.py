@@ -8,8 +8,8 @@ from importlib import import_module
 # of a cleaner namespace. These symbols used to be in
 # django/core/mail.py before the introduction of email
 # backends and the subsequent reorganization (See #10355)
-from utils import CachedDnsName, DNS_NAME
-from message import \
+from .utils import CachedDnsName, DNS_NAME
+from .message import \
     EmailMessage, EmailMultiAlternatives, \
     SafeMIMEText, SafeMIMEMultipart, \
     DEFAULT_ATTACHMENT_MIME_TYPE, make_msgid, \

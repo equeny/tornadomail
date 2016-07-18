@@ -1,4 +1,4 @@
-import contextlib
+# import contextlib
 
 from tornado import ioloop
 
@@ -9,25 +9,39 @@ from tornado import stack_context
 
 
 def callback(*args, **kwargs):
-    ioloop.IOLoop.instance().stop()
-    print 'Successfully sended'
+    callback.count = callback.count + 1
+    if callback.count == 5: 
+        print 'about to stop ioloop'
+        ioloop.IOLoop.instance().stop()
+    else: 
+        print 'callback count : ', callback.count
+    print 'Successfully sent'
+    print '*************'
 
+callback.count = 0
 
 def error_handler(e, msg, traceback):
     print 'Error:'
     print msg
+    print '**************'
     ioloop.IOLoop.instance().stop()
     return True
 
+l = ['sgp@gmail.com', 'testuser@gmail.com',
+     'pqr@gmail.com', 'abc@gmail.com', 'xyz@gmail.com']
 
 with stack_context.ExceptionStackContext(error_handler):
-    send_mail(
-        'subject', 'message', 'robo@djangostars.com',
-        ['anton.agafonov@gmail.com'], callback=callback,
-        connection=EmailBackend(
-            'smtp.gmail.com', 587, 'robo@djangostars.com', 'fakeuser2',
-            True
-         )
-    )
+    for to in l:
+        print 'to : ', to
+        print 'sending mail'
+        send_mail(
+            'Uber Now', 'Time to book uber', 'anirban.nick@gmail.com',
+            [to], callback=callback,
+            connection=EmailBackend(
+            'smtp.gmail.com', 587, 'username', 'userpassoword,
+                True
+            )
+        )
+        print 'mail initiated\n*************\n'
 
 ioloop.IOLoop.instance().start()
