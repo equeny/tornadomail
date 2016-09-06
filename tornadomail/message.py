@@ -2,26 +2,24 @@ import mimetypes
 import os
 import random
 import time
-from email import Charset, Encoders
+from email import charset as Charset, encoders as Encoders
 try:
     from email.generator import Generator
 except ImportError:
     from email.Generator import Generator # TODO: Remove when remove Python 2.4 support
-from email.MIMEText import MIMEText
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEBase import MIMEBase
-from email.Header import Header
-from email.Utils import formatdate, getaddresses, formataddr, parseaddr
 
-from utils import DNS_NAME
-from encoding import smart_str, force_unicode
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.header import Header
+from email.utils import formatdate, getaddresses, formataddr, parseaddr
+
+from .utils import DNS_NAME
+from .encoding import smart_str, force_unicode, smart_unicode
+from .compat import StringIO, basestring, PY3
 
 from tornado import gen
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
 
 # Don't BASE64-encode UTF-8 messages so that we avoid unwanted attention from
 # some spam filters.
@@ -107,16 +105,26 @@ def sanitize_address(addr, encoding):
         addr = parseaddr(force_unicode(addr))
     nm, addr = addr
     nm = str(Header(nm, encoding))
-    try:
-        addr = addr.encode('ascii')
-    except UnicodeEncodeError:  # IDN
-        if u'@' in addr:
-            localpart, domain = addr.split(u'@', 1)
+    if PY3:
+        if '@' in addr:
+            localpart, domain = addr.split('@', 1)
             localpart = str(Header(localpart, encoding))
-            domain = domain.encode('idna')
+            domain = smart_unicode(domain.encode('idna'))
             addr = '@'.join([localpart, domain])
         else:
             addr = str(Header(addr, encoding))
+    else:
+        try:
+            addr = addr.encode('ascii')
+        except UnicodeEncodeError:  # IDN
+            if u'@' in addr:
+                localpart, domain = addr.split(u'@', 1)
+                localpart = str(Header(localpart, encoding))
+                domain = domain.encode('idna')
+                addr = '@'.join([localpart, domain])
+            else:
+                addr = str(Header(addr, encoding))
+
     return formataddr((nm, addr))
 
 
@@ -128,7 +136,7 @@ class SafeMIMEText(MIMEText):
 
     def __setitem__(self, name, val):
         name, val = forbid_multi_line_headers(name, val, self.encoding)
-        MIMEText.__setitem__(self, name, val)
+        MIMEText.__setitem__(self, name, smart_unicode(val))
 
     def as_string(self, unixfrom=False):
         """Return the entire formatted message as a string.
@@ -201,7 +209,7 @@ class EmailMessage(object):
             self.bcc = list(bcc)
         else:
             self.bcc = []
-        self.from_email = from_email or DEFAULT_FROM_EMAIL
+        self.from_email = from_email or DEFAULT_FROM_MAIL
         self.reply_to = reply_to
         self.subject = subject
         self.body = body

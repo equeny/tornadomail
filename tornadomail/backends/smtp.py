@@ -5,7 +5,6 @@ import socket
 from .base import BaseEmailBackend
 from ..utils import DNS_NAME
 from ..message import sanitize_address
-
 from tornado import gen
 
 
@@ -107,7 +106,7 @@ class EmailBackend(BaseEmailBackend):
                       for addr in email_message.recipients()]
         try:
             yield gen.Task(self.connection.sendmail, from_email, recipients,
-                    email_message.message().as_string())
+                           email_message.message().as_string())
         except:
             if not self.fail_silently:
                 raise

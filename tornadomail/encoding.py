@@ -5,7 +5,9 @@ import datetime
 import codecs
 from decimal import Decimal
 
-from functional import Promise
+from .functional import Promise
+from .compat import basestring, unicode
+
 
 class TornadomainUnicodeDecodeError(UnicodeDecodeError):
     def __init__(self, obj, *args):
@@ -36,6 +38,7 @@ def smart_unicode(s, encoding='utf-8', strings_only=False, errors='strict'):
     if isinstance(s, Promise):
         # The input is the result of a gettext_lazy() call.
         return s
+
     return force_unicode(s, encoding, strings_only, errors)
 
 def is_protected_type(obj):
@@ -66,29 +69,32 @@ def force_unicode(s, encoding='utf-8', strings_only=False, errors='strict'):
     if strings_only and is_protected_type(s):
         return s
     try:
-        if not isinstance(s, basestring,):
+        if not isinstance(s, basestring):
             if hasattr(s, '__unicode__'):
                 s = unicode(s)
             else:
                 try:
-                    s = unicode(str(s), encoding, errors)
-                except UnicodeEncodeError:
-                    if not isinstance(s, Exception):
-                        raise
-                    # If we get to here, the caller has passed in an Exception
-                    # subclass populated with non-ASCII data without special
-                    # handling to display as a string. We need to handle this
-                    # without raising a further exception. We do an
-                    # approximation to what the Exception's standard str()
-                    # output should be.
-                    s = ' '.join([force_unicode(arg, encoding, strings_only,
-                            errors) for arg in s])
+                    s = s.decode(encoding, errors)
+                except:
+                    try:
+                        s = unicode(str(s), encoding, errors)
+                    except UnicodeEncodeError:
+                        if not isinstance(s, Exception):
+                            raise
+                        # If we get to here, the caller has passed in an Exception
+                        # subclass populated with non-ASCII data without special
+                        # handling to display as a string. We need to handle this
+                        # without raising a further exception. We do an
+                        # approximation to what the Exception's standard str()
+                        # output should be.
+                        s = ' '.join([force_unicode(
+                            arg, encoding, strings_only, errors) for arg in s])
         elif not isinstance(s, unicode):
             # Note: We use .decode() here, instead of unicode(s, encoding,
             # errors), so that if s is a SafeString, it ends up being a
             # SafeUnicode at the end.
             s = s.decode(encoding, errors)
-    except UnicodeDecodeError, e:
+    except UnicodeDecodeError as e:
         if not isinstance(s, Exception):
             raise TornadomainUnicodeDecodeError(s, *e.args)
         else:
