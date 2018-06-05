@@ -39,7 +39,7 @@ EmailMessage, EmailMultiAlternatives are almost identical to django classes, exc
         def post(self):
 
             def _finish(num):
-                print 'sended %d message(s)' % num
+                print 'sent %d message(s)' % num
                 self.render("index.html")
 
             message = EmailMessage(
